@@ -12,7 +12,7 @@ class TweetsController < ApplicationController
         set << tweet
       end
     end
-    render :json => set
+    render :json => set, :callback => params[:callback]
   end
 
   class Tweenumerator
