@@ -1,0 +1,25 @@
+#iplayer-twitter-sync {
+  float: left;
+}
+#iplayer-twitter-sync div.copy {
+  position: relative;
+  padding: 10px;
+  margin: 0 10px;
+  background: rgba(0,0,0,0.66);
+  color: #fff;
+  border: 1px solid #c8c8c8;
+  -webkit-border-radius: 5px;
+}
+#iplayer-twitter-sync h2 {
+  margin-top: 0;
+  font-size: 1.33em;
+}
+#iplayer-twitter-sync .time {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.25em;
+}
+#iplayer-twitter-sync ul.tweets {
+  
+}
