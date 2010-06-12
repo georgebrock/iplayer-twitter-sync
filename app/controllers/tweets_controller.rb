@@ -9,6 +9,7 @@ class TweetsController < ApplicationController
     end
 
     range = start_time...end_time
+    RAILS_DEFAULT_LOGGER.info range.inspect
 
     set = []
     Tweenumerator.new(current_user.twitter).each do |tweet|
