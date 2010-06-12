@@ -6,7 +6,7 @@
     {
       "matches": ["http://*.bbc.co.uk/iplayer/episode/*"],
       "css": ["page_mixin.css"],
-      "js": ["jquery-1.4.2.min.js", "page_mixin.js"]
+      "js": ["jquery-1.4.2.min.js", "cookies.js", "page_mixin.js"]
     }
   ],
   "permissions": []
