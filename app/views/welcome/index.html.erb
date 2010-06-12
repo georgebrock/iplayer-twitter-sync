@@ -1,0 +1,5 @@
+<% if logged_in? %>
+  <%= link_to "Logout #{current_user.name}!", logout_path %>
+<% else %>
+  <%= link_to "Log in bitches!", login_path %>
+<% end %>
