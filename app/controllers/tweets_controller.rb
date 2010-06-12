@@ -1,9 +1,9 @@
 class TweetsController < ApplicationController
   before_filter :login_required
   def index
-    start_time = Time.parse(params[:start])
+    start_time = Time.zone.parse(params[:start])
     if params[:end]
-      end_time = Time.parse(params[:end])
+      end_time = Time.zone.parse(params[:end])
     else
       end_time = start_time + params[:duration].to_i.minutes
     end
