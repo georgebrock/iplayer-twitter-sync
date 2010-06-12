@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>iPlayer Sync</title>
+    <script>
+
+    chrome.extension.onRequest.addListener(function(request, sender, callback) {
+      if(request.action === "loadTweets") {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", request.url, true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState == 4) {
+            callback(xhr.responseText);
+          }
+        }
+        xhr.send();
+      }
+    });
+
+    </script>
+  </head>
+  <body></body>
+</html>

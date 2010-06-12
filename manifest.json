@@ -2,12 +2,13 @@
   "name": "Twitter Sync",
   "version": "0.1",
   "description": "Synchronise tweets with TV programmes on BBC iPlayer.",
+  "permissions": ["http://iplayer-sync.heroku.com/"],
+  "background_page": "background.html",
   "content_scripts": [
     {
       "matches": ["http://*.bbc.co.uk/iplayer/episode/*"],
       "css": ["page_mixin.css"],
       "js": ["jquery-1.4.2.min.js", "cookies.js", "page_mixin.js"]
     }
-  ],
-  "permissions": []
+  ]
 }
