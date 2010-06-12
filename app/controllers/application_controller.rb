@@ -9,6 +9,7 @@ class ApplicationController < ActionController::Base
     redirect_to( (session[:source_url] || "/") + "?twitter_token=#{cookies[:remember_token]}" )
   end
 
+  before_filter :store_location
   def store_location
     session[:source_url] = params[:source_url] if params[:source_url]
   end
