@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   helper :all # include all helpers, all the time
   protect_from_forgery # See ActionController::RequestForgeryProtection for details
 
-  def authentication_succeeded(message)
+  def authentication_succeeded(message = nil)
     redirect_to( (session[:source_url] || "/") + "?twitter_token=#{cookies[:remember_token]}" )
   end
 
