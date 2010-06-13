@@ -68,7 +68,7 @@
 
   if(!authToken()) {
     var loginURL = twitterHost + "/login?source_url=" + escape(window.location);
-    $copy.append("<div class=\"auth\"><a href=\"" + loginURL + "\">Log in to Twitter</a></div>");
+    $copy.append("<div class=\"action\"><a href=\"" + loginURL + "\">Log in to Twitter</a></div>");
     return;
   }
 
@@ -86,14 +86,48 @@
     startTime = new Date(year, month, day, hours, minutes, 0, 0);
   }
 
-  var tweetsURL = twitterHost + "/tweets?remember_token=" + escape(authToken()) + "&start=" + escape(startTimeString) + "&duration=" + escape(duration);
-  chrome.extension.sendRequest({"action": "loadTweets", "url": tweetsURL}, function(json) {
-    var tweets = JSON.parse(json);
-    tweets = tweets.map(function(tweet) {
-      tweet.created_at = new Date(Date.parse(tweet.created_at));
-      return tweet;
+  var loadTweets = function() {
+    $copy.append("<div class=\"loading\" style=\"background-image:url(" + chrome.extension.getURL("loading.gif") + ");\"></div>");
+    var tweetsURL = twitterHost + "/tweets?remember_token=" + escape(authToken()) + "&start=" + escape(startTimeString) + "&duration=" + escape(duration);
+    console.log(tweetsURL);
+    chrome.extension.sendRequest({"action": "loadTweets", "url": tweetsURL}, function(json) {
+      try {
+        var tweets = JSON.parse(json);
+      } catch(e) {
+        var $retryButton = $("<a>Retry</a>").click(function(){
+          $retryContainer.fadeOut(function() { $(this).remove(); });
+          loadTweets();
+        });
+        var $retryContainer = $("<div class=\"action\"><p>You know how Twitter doesn't work sometimes?<br/>This is one of those times.</p></div>").append($retryButton);
+        $copy
+          .find(".loading").remove().end()
+          .append($retryContainer);
+        return;
+      }
+
+      if(tweets.length === 0) {
+        $copy
+          .append("<div class=\"action\">No one tweeted while this programme was on.</div>")
+          .find(".loading").remove();
+        return;
+      }
+
+      tweets = tweets.map(function(tweet) {
+        tweet.created_at = new Date(Date.parse(tweet.created_at));
+        return tweet;
+      });
+
+      var $playButton = $("<a>Play</a>").click(function() {
+        displayNextTweet(tweets, startTime);
+        $playButtonWrapper.fadeOut(function() { $(this).remove(); });
+      });
+      var $playButtonWrapper = $("<div class=\"action\"></div>").append($playButton);
+      $copy
+        .append($playButtonWrapper)
+        .find(".loading").remove();
     });
-    displayNextTweet(tweets, startTime);
-  });
+  }
+
+  loadTweets();
 
 })(jQuery);
