@@ -58,6 +58,7 @@
     });
 
   var $slider = $("<input type=\"range\" value=\"0\" min=\"0\" max=\"" + (duration * 60) + "\" id=\"iplayer-twitter-sync-slider\" />")
+    .hide()
     .css({
       "float": "right",
       "width": playerWidth + "px"
@@ -137,6 +138,7 @@
       });
 
       var $playButton = $("<a>Play</a>").click(function() {
+        $slider.show();
         setInterval(function() {
           $slider.trigger("increment");
         }, 1000);
