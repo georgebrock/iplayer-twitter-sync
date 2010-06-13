@@ -17,6 +17,8 @@ class TweetsController < ApplicationController
       break if time < range.first
       set << tweet if range.include?(time)
     end
+
+    expires_in 1.year, :public => true
     render :json => set, :callback => params[:callback]
   end
 
