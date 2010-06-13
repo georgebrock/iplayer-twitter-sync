@@ -34,6 +34,17 @@
     $tweets.append("<li>" + img + userLink + " " + data.text + "</li>");
   }
 
+  var drawTimeline = function(){
+    var canvas = $canvas.get(0);
+    var mduration = duration * 60000;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = "white";
+    tweets.forEach(function(e){
+      var pos = $canvas.width() * e.iplayer_time / mduration;
+      ctx.fillRect(pos, 0, 1, 3);
+    });
+  }
+
   var $time = $("<span class=\"time\"></span>");
   var $tweets = $("<ol class=\"tweets\"></ol>");
 
@@ -61,6 +72,7 @@
     .hide()
     .css({
       "float": "right",
+      "clear": "right",
       "width": playerWidth + "px"
     })
     .bind("increment", function() {
@@ -73,10 +85,19 @@
       $time.html(formatTime(seconds));
       $tweets.html("");
       tweets.forEach(function(tweet) {
-        if(tweet.created_at - startTime < mseconds) {
+        if(tweet.iplayer_time < mseconds) {
           displayTweet(tweet);
         }
       });
+    });
+
+  var $canvas = $("<canvas width=\"" + playerWidth + "\" height=\"10\"></canvas>")
+    .hide()
+    .css({
+      height: "10px",
+      float: "right",
+      width: playerWidth + "px",
+      margin: "-2px -8px 0 0"
     });
 
   $("#emp")
@@ -85,9 +106,11 @@
       "width": windowWidth+"px",
       "margin-left": -Math.floor((windowWidth - $("#emp-container").width())/2)+"px"
     })
-    .append($slider);
+    .append($slider)
+    .append($canvas);
 
-  $("#emp-container").css("overflow", "visible");
+  $("#emp-container")
+    .css({"overflow": "visible", "margin-bottom": "50px"});
 
   if(!authToken()) {
     var loginURL = twitterHost + "/login?source_url=" + escape(window.location);
@@ -134,11 +157,15 @@
 
       tweets = tweets.map(function(tweet) {
         tweet.created_at = new Date(Date.parse(tweet.created_at));
+        tweet.iplayer_time = tweet.created_at - startTime;
         return tweet;
       });
 
+      drawTimeline();
+
       var $playButton = $("<a>Play</a>").click(function() {
         $slider.show();
+        $canvas.show();
         setInterval(function() {
           $slider.trigger("increment");
         }, 1000);
