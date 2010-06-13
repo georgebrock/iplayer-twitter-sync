@@ -31,7 +31,7 @@
   var displayTweet = function(data) {
     var img = "<img src=\"" + data.user.profile_image_url.replace(/_normal\./, '_mini.') + "\" alt=\"\" />";
     var userLink = "<a href=\"http://www.twitter.com/" + data.user.screen_name + "\">" + data.user.screen_name + "</a>"
-    $tweets.prepend("<li>" + img + userLink + " " + data.text + "</li>");
+    $tweets.append("<li>" + img + userLink + " " + data.text + "</li>");
   }
 
   var $time = $("<span class=\"time\"></span>");
