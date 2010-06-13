@@ -1,6 +1,10 @@
 (function($) {
   var twitterHost = "http://iplayer-sync.heroku.com";
 
+  var startTimeString = $(".first_broadcast_date span").text(),
+      duration = parseInt($(".duration span").text(), 10),
+      tweets = null;
+
   var authToken = function() {
     var token, matches;
 
@@ -16,23 +20,18 @@
     return token;
   }
 
-  var displayNextTweet = function(tweets, now) {
-    var nextTweet = tweets.pop();
-    var wait = nextTweet.created_at - now;
-    console.log("Wait " + (wait/1000) + "s until next tweet");
-    setTimeout(function() {
-      displayTweet(nextTweet);
-      if(tweets.length > 0) {
-        displayNextTweet(tweets, nextTweet.created_at);
-      }
-    }, wait);
+  var formatTime = function(seconds) {
+    var hours = Math.floor(seconds / 3600);
+    seconds -= hours * 3600;
+    var minutes = Math.floor(seconds / 60);
+    seconds -= minutes * 60;
+    return hours + ":" + (minutes < 10 ? "0"+minutes : minutes) + ":" + (seconds < 10 ? "0"+seconds : seconds);
   }
 
   var displayTweet = function(data) {
     var img = "<img src=\"" + data.user.profile_image_url.replace(/_normal\./, '_mini.') + "\" alt=\"\" />";
     var userLink = "<a href=\"http://www.twitter.com/" + data.user.screen_name + "\">" + data.user.screen_name + "</a>"
-    $tweets.hide().prepend("<li>" + img + userLink + " " + data.text + "</li>").slideDown();
-    $time.html(data.created_at.toLocaleTimeString());
+    $tweets.prepend("<li>" + img + userLink + " " + data.text + "</li>");
   }
 
   var $time = $("<span class=\"time\"></span>");
@@ -44,7 +43,8 @@
 
   var $container = $("<div id=\"iplayer-twitter-sync\"></div>");
   var windowWidth = $(window).width();
-  var width = windowWidth - $("#emp").width();
+  var playerWidth = $("#emp").width();
+  var width = windowWidth - playerWidth;
 
   $copy
     .css({
@@ -57,12 +57,34 @@
       "width": width+"px"
     });
 
+  var $slider = $("<input type=\"range\" value=\"0\" min=\"0\" max=\"" + (duration * 60) + "\" id=\"iplayer-twitter-sync-slider\" />")
+    .css({
+      "float": "right",
+      "width": playerWidth + "px"
+    })
+    .bind("increment", function() {
+      this.value = parseInt(this.value, 10) + 1;
+      $(this).trigger("change");
+    })
+    .change(function() {
+      var seconds = parseInt(this.value, 10),
+          mseconds = seconds * 1000;
+      $time.html(formatTime(seconds));
+      $tweets.html("");
+      tweets.forEach(function(tweet) {
+        if(tweet.created_at - startTime < mseconds) {
+          displayTweet(tweet);
+        }
+      });
+    });
+
   $("#emp")
     .prepend($container)
     .css({
       "width": windowWidth+"px",
       "margin-left": -Math.floor((windowWidth - $("#emp-container").width())/2)+"px"
-    });
+    })
+    .append($slider);
 
   $("#emp-container").css("overflow", "visible");
 
@@ -71,9 +93,6 @@
     $copy.append("<div class=\"action\"><a href=\"" + loginURL + "\">Log in to Twitter</a></div>");
     return;
   }
-
-  var startTimeString = $(".first_broadcast_date span").text(),
-      duration = parseInt($(".duration span").text(), 10);
 
   var matches, startTime;
   if(matches = /^[^,]+, (\d{1,2}):(\d{2})([ap]m) ([A-Za-z]+), (\d+) ([A-Za-z]+) (\d{4})$/.exec(startTimeString)) {
@@ -89,10 +108,10 @@
   var loadTweets = function() {
     $copy.append("<div class=\"loading\" style=\"background-image:url(" + chrome.extension.getURL("loading.gif") + ");\"></div>");
     var tweetsURL = twitterHost + "/tweets?remember_token=" + escape(authToken()) + "&start=" + escape(startTimeString) + "&duration=" + escape(duration);
-    console.log(tweetsURL);
+
     chrome.extension.sendRequest({"action": "loadTweets", "url": tweetsURL}, function(json) {
       try {
-        var tweets = JSON.parse(json);
+        tweets = JSON.parse(json);
       } catch(e) {
         var $retryButton = $("<a>Retry</a>").click(function(){
           $retryContainer.fadeOut(function() { $(this).remove(); });
@@ -118,7 +137,9 @@
       });
 
       var $playButton = $("<a>Play</a>").click(function() {
-        displayNextTweet(tweets, startTime);
+        setInterval(function() {
+          $slider.trigger("increment");
+        }, 1000);
         $playButtonWrapper.fadeOut(function() { $(this).remove(); });
       });
       var $playButtonWrapper = $("<div class=\"action\"></div>").append($playButton);
