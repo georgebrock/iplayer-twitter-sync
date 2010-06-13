@@ -16,11 +16,23 @@
     return token;
   }
 
+  var displayNextTweet = function(tweets, now) {
+    var nextTweet = tweets.pop();
+    var wait = nextTweet.created_at - now;
+    console.log("Wait " + (wait/1000) + "s until next tweet");
+    setTimeout(function() {
+      displayTweet(nextTweet);
+      if(tweets.length > 0) {
+        displayNextTweet(tweets, nextTweet.created_at);
+      }
+    }, wait);
+  }
+
   var displayTweet = function(data) {
     var img = "<img src=\"" + data.user.profile_image_url.replace(/_normal\./, '_mini.') + "\" alt=\"\" />";
     var userLink = "<a href=\"http://www.twitter.com/" + data.user.screen_name + "\">" + data.user.screen_name + "</a>"
-    $tweets.prepend("<li>" + img + userLink + " " + data.text + "</li>");
-    $time.html(data.created_at);
+    $tweets.hide().prepend("<li>" + img + userLink + " " + data.text + "</li>").slideDown();
+    $time.html(data.created_at.toLocaleTimeString());
   }
 
   var $time = $("<span class=\"time\"></span>");
@@ -60,15 +72,28 @@
     return;
   }
 
-  var startTime = $(".first_broadcast_date span").text(),
+  var startTimeString = $(".first_broadcast_date span").text(),
       duration = parseInt($(".duration span").text(), 10);
 
-  var tweetsURL = twitterHost + "/tweets?remember_token=" + escape(authToken()) + "&start=" + escape(startTime) + "&duration=" + escape(duration);
+  var matches, startTime;
+  if(matches = /^[^,]+, (\d{1,2}):(\d{2})([ap]m) ([A-Za-z]+), (\d+) ([A-Za-z]+) (\d{4})$/.exec(startTimeString)) {
+    var year = parseInt(matches[7], 10),
+        month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(matches[6]),
+        day = parseInt(matches[5], 10),
+        hours = parseInt(matches[1], 10) + (matches[3] == "pm" ? 12 : 0),
+        minutes = parseInt(matches[2], 10);
+
+    startTime = new Date(year, month, day, hours, minutes, 0, 0);
+  }
+
+  var tweetsURL = twitterHost + "/tweets?remember_token=" + escape(authToken()) + "&start=" + escape(startTimeString) + "&duration=" + escape(duration);
   chrome.extension.sendRequest({"action": "loadTweets", "url": tweetsURL}, function(json) {
     var tweets = JSON.parse(json);
-    for(var i = 0; i < tweets.length; i++) {
-      displayTweet(tweets[i]);
-    }
+    tweets = tweets.map(function(tweet) {
+      tweet.created_at = new Date(Date.parse(tweet.created_at));
+      return tweet;
+    });
+    displayNextTweet(tweets, startTime);
   });
 
 })(jQuery);
